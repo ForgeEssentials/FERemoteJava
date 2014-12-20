@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map.Entry;
 
 import com.forgeessentials.remote.client.RemoteClient;
@@ -16,8 +17,9 @@ public class Test implements Runnable {
 
     private RequestAuth auth;
 
-    public Test() throws UnknownHostException, IOException
+    public Test() throws UnknownHostException, IOException, NoSuchAlgorithmException
     {
+        // client = RemoteClient.createSslClient("localhost", 27020);
         client = new RemoteClient("localhost", 27020);
         new Thread(this).start();
         auth = new RequestAuth("ForgeDevName", "password");
@@ -125,7 +127,7 @@ public class Test implements Runnable {
         client.close();
     }
 
-    public static void main(String[] args) throws UnknownHostException, IOException
+    public static void main(String[] args) throws UnknownHostException, IOException, NoSuchAlgorithmException
     {
         Test main = new Test();
         main.queryPlayer();

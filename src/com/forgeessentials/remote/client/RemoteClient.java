@@ -1,10 +1,12 @@
 package com.forgeessentials.remote.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,6 +25,9 @@ import com.google.gson.reflect.TypeToken;
 public class RemoteClient implements Runnable {
 
     public static final String SEPARATOR = "\n\n\n";
+
+    private static String certificateFilename = "com/forgeessentials/remote/client/FeRemotePub.jks";
+    private static String certificatePassword = "feremote";
 
     public final Socket socket;
 
@@ -56,6 +61,26 @@ public class RemoteClient implements Runnable {
     }
 
     // ------------------------------------------------------------
+
+    public static RemoteClient createSslClient(String host, int port)
+    {
+        try
+        {
+            InputStream is = ClassLoader.getSystemResourceAsStream(certificateFilename);
+            if (is != null)
+            {
+                SSLContextHelper sslCtxHelper = new SSLContextHelper();
+                sslCtxHelper.loadSSLCertificate(is, certificatePassword, certificatePassword);
+                return new RemoteClient("localhost", 27020, sslCtxHelper.getSSLCtx());
+            }
+            else
+                throw new RuntimeException("[remote] Unable to load SSL certificate: File not found");
+        }
+        catch (IOException | GeneralSecurityException e1)
+        {
+            throw new RuntimeException("[remote] Unable to load SSL certificate: " + e1.getMessage());
+        }
+    }
 
     /**
      * Main message loop
