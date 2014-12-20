@@ -126,10 +126,10 @@ public class RemoteClient implements Runnable {
             return;
         }
 
-        if (!response.success)
-            System.err.println(String.format("[remote] Response #%d failed: %s", response.rid, response.error));
-        else
-            System.out.println(String.format("[remote] Response #%d successful", response.rid, response.data.toString()));
+//        if (!response.success)
+//            System.err.println(String.format("[remote] Response #%d failed: %s", response.rid, response.message));
+//        else
+//            System.out.println(String.format("[remote] Response #%d successful", response.rid, response.data.toString()));
 
         // Check, if too many messages piled up
         if (responses.size() > 10)
@@ -174,7 +174,19 @@ public class RemoteClient implements Runnable {
             return null;
 
         // Deserialize the data payload now that we know it's type
-        return new RemoteResponse<T>(response, gson.fromJson(response.data, clazz));
+        return transformResponse(response, clazz);
+    }
+
+    /**
+     * Transforms a generic response into one with the correctly deserialized data
+     * 
+     * @param response
+     * @param clazz
+     * @return
+     */
+    public <T> RemoteResponse<T> transformResponse(RemoteResponse<JsonElement> response, Class<T> clazz)
+    {
+        return RemoteResponse.transform(response, gson.fromJson(response.data, clazz));
     }
 
     /**

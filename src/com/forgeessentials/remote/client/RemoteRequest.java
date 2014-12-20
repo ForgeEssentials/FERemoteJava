@@ -31,4 +31,8 @@ public class RemoteRequest<T> {
         this(id, null, data);
     }
 
+    public static <T> RemoteRequest<T> transform(RemoteRequest<?> request, T newData)
+    {
+        return new RemoteRequest<T>(request.id, request.rid, request.auth, newData);
+    }
 }

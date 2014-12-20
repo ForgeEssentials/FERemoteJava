@@ -5,7 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class GetPlayerHandler {
+public final class QueryPlayerHandler {
+    
+    public static final String ID = "query_player";
 
     public static class Request {
 
