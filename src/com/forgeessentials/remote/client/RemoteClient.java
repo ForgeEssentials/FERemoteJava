@@ -26,7 +26,7 @@ public class RemoteClient implements Runnable {
 
     public static final String SEPARATOR = "\n\n\n";
 
-    private static String certificateFilename = "com/forgeessentials/remote/client/FeRemotePub.jks";
+    private static String certificateFilename = "FeRemotePub.jks";
     private static String certificatePassword = "feremote";
 
     public final Socket socket;
