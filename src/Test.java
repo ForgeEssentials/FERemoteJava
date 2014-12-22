@@ -22,7 +22,8 @@ public class Test implements Runnable {
         // client = RemoteClient.createSslClient("localhost", 27020);
         client = new RemoteClient("localhost", 27020);
         new Thread(this).start();
-        auth = new RequestAuth("ForgeDevName", "password");
+        auth = new RequestAuth("ForgeDevName", "pmZGpN");
+        auth = new RequestAuth("a129ebab-93ca-3ac8-86a9-47cce1be86d0", "pmZGpN");
     }
 
     @Override
@@ -43,6 +44,12 @@ public class Test implements Runnable {
                     {
                         RemoteResponse<PushChatHandler.Response> r = client.transformResponse(response, PushChatHandler.Response.class);
                         System.out.println(String.format("Chat (%s): %s", r.data.username, r.data.message));
+                        break;
+                    }
+                    case "shutdown":
+                    {
+                        System.out.println("Server shutdown");
+                        client.close();
                         break;
                     }
                     default:
@@ -80,45 +87,38 @@ public class Test implements Runnable {
 
     public void queryPlayer()
     {
-        try
+        RemoteResponse<QueryPlayerHandler.Response> response = client.sendRequestAndWait(new RemoteRequest<>(QueryPlayerHandler.ID, auth,
+                new QueryPlayerHandler.Request("ForgeDevName", "location", "detail")), QueryPlayerHandler.Response.class, 60 * 1000);
+        if (response == null || !response.success)
         {
-            RemoteResponse<QueryPlayerHandler.Response> response = client.sendRequestAndWait(new RemoteRequest<>(QueryPlayerHandler.ID, auth,
-                    new QueryPlayerHandler.Request("ForgeDevName", "location", "detail")), QueryPlayerHandler.Response.class, 60 * 1000);
-            if (response == null || !response.success)
-            {
-                System.err.println("Error: " + (response == null ? "no response" : response.message));
-            }
-            else
-            {
-                System.out.println("Response:");
-                System.out.println("Username = " + response.data.username);
-                System.out.println("UUID     = " + response.data.uuid);
-                for (Entry<String, Object> data : response.data.data.entrySet())
-                {
-                    System.out.println("> " + data.getKey() + ": " + data.getValue().toString());
-                }
-            }
+            System.err.println("Error: " + (response == null ? "no response" : response.message));
         }
-        catch (IOException e)
+        else
         {
-            e.printStackTrace();
+            System.out.println("Response:");
+            System.out.println("Username = " + response.data.username);
+            System.out.println("UUID     = " + response.data.uuid);
+            for (Entry<String, Object> data : response.data.data.entrySet())
+            {
+                System.out.println("> " + data.getKey() + ": " + data.getValue().toString());
+            }
         }
     }
 
     public void pushChat(boolean enable)
     {
-        try
+        RemoteResponse<?> response = client.sendRequestAndWait(new RemoteRequest<>(PushChatHandler.ID, auth, new PushChatHandler.Request(enable)),
+                PushChatHandler.Response.class, 60 * 1000);
+        if (response == null)
         {
-            RemoteResponse<?> response = client.sendRequestAndWait(new RemoteRequest<>(PushChatHandler.ID, auth, new PushChatHandler.Request(enable)),
-                    PushChatHandler.Response.class, 60 * 1000);
+            System.err.println("No response");
+        }
+        else
+        {
             if (response.success)
                 System.out.println(enable ? "Enabled chat monitoring" : "Disabled chat monitoring");
             else
                 System.err.println(response.message);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
         }
     }
 
@@ -130,6 +130,8 @@ public class Test implements Runnable {
     public static void main(String[] args) throws UnknownHostException, IOException, NoSuchAlgorithmException
     {
         Test main = new Test();
+        if (main.client.isClosed())
+            return;
         main.queryPlayer();
         main.pushChat(true);
         // main.close();

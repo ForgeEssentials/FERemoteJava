@@ -151,10 +151,11 @@ public class RemoteClient implements Runnable {
             return;
         }
 
-//        if (!response.success)
-//            System.err.println(String.format("[remote] Response #%d failed: %s", response.rid, response.message));
-//        else
-//            System.out.println(String.format("[remote] Response #%d successful", response.rid, response.data.toString()));
+        // if (!response.success)
+        // System.err.println(String.format("[remote] Response #%d failed: %s", response.rid, response.message));
+        // else
+        // System.out.println(String.format("[remote] Response #%d successful", response.rid,
+        // response.data.toString()));
 
         // Check, if too many messages piled up
         if (responses.size() > 10)
@@ -172,8 +173,10 @@ public class RemoteClient implements Runnable {
      * @throws IOException
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void sendRequest(RemoteRequest request) throws IOException
+    public synchronized void sendRequest(RemoteRequest request) throws IOException
     {
+        if (isClosed())
+            return;
         request.rid = currentRid++;
         OutputStreamWriter ow = new OutputStreamWriter(socket.getOutputStream());
         ow.write(gson.toJson(request) + SEPARATOR);
@@ -189,15 +192,36 @@ public class RemoteClient implements Runnable {
      * @param timeout
      * @throws IOException
      */
-    public synchronized <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz, int timeout) throws IOException
+    public synchronized RemoteResponse<JsonElement> sendRequestAndWait(RemoteRequest<?> request, int timeout)
     {
-        sendRequest(request);
-        waitingRids.add(request.rid);
+        try
+        {
+            if (isClosed())
+                return null;
+            sendRequest(request);
+            waitingRids.add(request.rid);
+            return waitForResponse(request.rid, timeout);
+        }
+        catch (IOException e)
+        {
+            return null;
+        }
+    }
 
-        RemoteResponse<JsonElement> response = waitForResponse(request.rid, timeout);
+    /**
+     * Send a request and wait for the response
+     * 
+     * 
+     * @param request
+     * @param clazz
+     * @param timeout
+     * @throws IOException
+     */
+    public synchronized <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz, int timeout)
+    {
+        RemoteResponse<JsonElement> response = sendRequestAndWait(request, timeout);
         if (response == null)
             return null;
-
         // Deserialize the data payload now that we know it's type
         return transformResponse(response, clazz);
     }
