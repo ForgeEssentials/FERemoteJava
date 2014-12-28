@@ -3,7 +3,6 @@ package com.forgeessentials.remote.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
@@ -16,11 +15,10 @@ import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 
+import com.forgeessentials.remote.client.RemoteResponse.JsonRemoteResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 public class RemoteClient implements Runnable {
 
@@ -39,7 +37,7 @@ public class RemoteClient implements Runnable {
 
     private Set<Integer> waitingRids = new HashSet<Integer>(); // Collections.synchronizedSet(new HashSet<Integer>());
 
-    private List<RemoteResponse<JsonElement>> responses = Collections.synchronizedList(new LinkedList<RemoteResponse<JsonElement>>());
+    private List<JsonRemoteResponse> responses = Collections.synchronizedList(new LinkedList<JsonRemoteResponse>());
 
     // ------------------------------------------------------------
 
@@ -58,6 +56,11 @@ public class RemoteClient implements Runnable {
     public RemoteClient(String host, int port, SSLContext sstCtx) throws UnknownHostException, IOException
     {
         this(sstCtx.getSocketFactory().createSocket(host, port));
+    }
+
+    public Gson getGson()
+    {
+        return gson;
     }
 
     // ------------------------------------------------------------
@@ -133,12 +136,17 @@ public class RemoteClient implements Runnable {
      */
     protected synchronized void processMessage(String message) throws IOException
     {
-        RemoteResponse<JsonElement> response;
         try
         {
-            Type type = new TypeToken<RemoteResponse<JsonElement>>() {/**/
-            }.getType();
-            response = gson.fromJson(message, type);
+            JsonRemoteResponse response = gson.fromJson(message, JsonRemoteResponse.class);
+
+            // Check, if too many messages piled up
+            if (responses.size() > 32)
+                responses.remove(0);
+
+            // Add response to last responses and notify all waiting threads
+            responses.add(response);
+            notifyAll();
         }
         catch (IllegalArgumentException e)
         {
@@ -150,20 +158,54 @@ public class RemoteClient implements Runnable {
             // OutputHandler.felog.warning("[remote] Message error: " + e.getMessage());
             return;
         }
+    }
 
-        // if (!response.success)
-        // System.err.println(String.format("[remote] Response #%d failed: %s", response.rid, response.message));
-        // else
-        // System.out.println(String.format("[remote] Response #%d successful", response.rid,
-        // response.data.toString()));
+    /**
+     * Wait for a response. If rid is null, it waits for any message that is not already waited for.
+     * 
+     * @param rid
+     * @param timeout
+     */
+    protected synchronized JsonRemoteResponse waitForResponse(Integer rid, int timeout)
+    {
+        // Remember start-time
+        long startTime = System.currentTimeMillis();
+        try
+        {
+            while (true)
+            {
+                // Check if the socket was closed
+                if (isClosed())
+                    return null;
 
-        // Check, if too many messages piled up
-        if (responses.size() > 10)
-            responses.remove(0);
+                // Wait for response to arrive and check for timeout
+                if (timeout > 0)
+                {
+                    long t = startTime + timeout - System.currentTimeMillis();
+                    wait(Math.max(1, t));
+                    if (t <= 0)
+                        return null;
+                }
+                else
+                    wait();
 
-        // Add response to last responses and notify all waiting threads
-        responses.add(response);
-        notifyAll();
+                Iterator<JsonRemoteResponse> it = responses.iterator();
+                while (it.hasNext())
+                {
+                    JsonRemoteResponse response = it.next();
+                    if (rid == null && !waitingRids.contains(response.rid) || rid != null && response.rid == rid)
+                    {
+                        // Remove the response from the queue
+                        it.remove();
+                        return response;
+                    }
+                }
+            }
+        }
+        catch (InterruptedException e)
+        {
+            return null;
+        }
     }
 
     /**
@@ -192,7 +234,7 @@ public class RemoteClient implements Runnable {
      * @param timeout
      * @throws IOException
      */
-    public synchronized RemoteResponse<JsonElement> sendRequestAndWait(RemoteRequest<?> request, int timeout)
+    public synchronized JsonRemoteResponse sendRequestAndWait(RemoteRequest<?> request, int timeout)
     {
         try
         {
@@ -217,13 +259,41 @@ public class RemoteClient implements Runnable {
      * @param timeout
      * @throws IOException
      */
-    public synchronized <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz, int timeout)
+    public JsonRemoteResponse sendRequestAndWait(RemoteRequest<?> request)
     {
-        RemoteResponse<JsonElement> response = sendRequestAndWait(request, timeout);
+        return sendRequestAndWait(request, 0);
+    }
+
+    /**
+     * Send a request and wait for the response
+     * 
+     * 
+     * @param request
+     * @param clazz
+     * @param timeout
+     * @throws IOException
+     */
+    public <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz, int timeout)
+    {
+        JsonRemoteResponse response = sendRequestAndWait(request, timeout);
         if (response == null)
             return null;
         // Deserialize the data payload now that we know it's type
         return transformResponse(response, clazz);
+    }
+
+    /**
+     * Send a request and wait for the response
+     * 
+     * 
+     * @param request
+     * @param clazz
+     * @param timeout
+     * @throws IOException
+     */
+    public <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz)
+    {
+        return sendRequestAndWait(request, clazz, 0);
     }
 
     /**
@@ -233,57 +303,9 @@ public class RemoteClient implements Runnable {
      * @param clazz
      * @return
      */
-    public <T> RemoteResponse<T> transformResponse(RemoteResponse<JsonElement> response, Class<T> clazz)
+    public <T> RemoteResponse<T> transformResponse(JsonRemoteResponse response, Class<T> clazz)
     {
         return RemoteResponse.transform(response, gson.fromJson(response.data, clazz));
-    }
-
-    /**
-     * Wait for a response. If rid is null, it waits for any message that is not already waited for.
-     * 
-     * @param rid
-     * @param timeout
-     */
-    protected synchronized RemoteResponse<JsonElement> waitForResponse(Integer rid, int timeout)
-    {
-        // Remember start-time
-        long startTime = System.currentTimeMillis();
-        try
-        {
-            while (true)
-            {
-                // Check if the socket was closed
-                if (isClosed())
-                    return null;
-
-                // Wait for response to arrive and check for timeout
-                if (timeout > 0)
-                {
-                    long t = startTime + timeout - System.currentTimeMillis();
-                    wait(Math.max(1, t));
-                    if (t <= 0)
-                        return null;
-                }
-                else
-                    wait();
-
-                Iterator<RemoteResponse<JsonElement>> it = responses.iterator();
-                while (it.hasNext())
-                {
-                    RemoteResponse<JsonElement> response = it.next();
-                    if (rid == null && !waitingRids.contains(response.rid) || rid != null && response.rid == rid)
-                    {
-                        // Remove the response from the queue
-                        it.remove();
-                        return response;
-                    }
-                }
-            }
-        }
-        catch (InterruptedException e)
-        {
-            return null;
-        }
     }
 
     /**
@@ -291,7 +313,7 @@ public class RemoteClient implements Runnable {
      * 
      * @param timeout
      */
-    public RemoteResponse<JsonElement> getNextResponse(int timeout)
+    public JsonRemoteResponse getNextResponse(int timeout)
     {
         return waitForResponse(null, timeout);
     }

@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import com.forgeessentials.remote.client.RemoteClient;
 import com.forgeessentials.remote.client.RemoteRequest;
 import com.forgeessentials.remote.client.RemoteResponse;
+import com.forgeessentials.remote.client.RemoteResponse.JsonRemoteResponse;
 import com.forgeessentials.remote.client.RequestAuth;
 import com.forgeessentials.remote.client.data.PushChatHandler;
 import com.forgeessentials.remote.client.data.QueryPlayerHandler;
@@ -31,7 +32,7 @@ public class Test implements Runnable {
     {
         while (!client.isClosed())
         {
-            RemoteResponse<JsonElement> response = client.getNextResponse(0);
+            JsonRemoteResponse response = client.getNextResponse(0);
             if (response != null)
             {
                 if (response.id == null)
@@ -61,7 +62,7 @@ public class Test implements Runnable {
         }
     }
 
-    public void handleUnknownMessage(RemoteResponse<JsonElement> response)
+    public void handleUnknownMessage(JsonRemoteResponse response)
     {
         if (response.id == null)
             response.id = "";
@@ -96,9 +97,9 @@ public class Test implements Runnable {
         else
         {
             System.out.println("Response:");
-            System.out.println("Username = " + response.data.username);
-            System.out.println("UUID     = " + response.data.uuid);
-            for (Entry<String, Object> data : response.data.data.entrySet())
+            System.out.println("Username = " + response.data.players.get(0).name);
+            System.out.println("UUID     = " + response.data.players.get(0).uuid);
+            for (Entry<String, JsonElement> data : response.data.players.get(0).data.entrySet())
             {
                 System.out.println("> " + data.getKey() + ": " + data.getValue().toString());
             }
