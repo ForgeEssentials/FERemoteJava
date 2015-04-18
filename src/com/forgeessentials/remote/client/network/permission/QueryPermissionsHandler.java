@@ -1,4 +1,4 @@
-package com.forgeessentials.remote.client.network;
+package com.forgeessentials.remote.client.network.permission;
 
 import java.util.ArrayList;
 import java.util.HashMap;

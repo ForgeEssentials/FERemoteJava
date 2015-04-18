@@ -11,10 +11,10 @@ import com.forgeessentials.remote.client.RequestAuth;
 import com.forgeessentials.remote.client.data.PermissionList;
 import com.forgeessentials.remote.client.data.UserIdent;
 import com.forgeessentials.remote.client.network.PushChatHandler;
-import com.forgeessentials.remote.client.network.QueryPermissionsHandler;
-import com.forgeessentials.remote.client.network.QueryPermissionsHandler.AreaZone;
-import com.forgeessentials.remote.client.network.QueryPermissionsHandler.WorldZone;
-import com.forgeessentials.remote.client.network.QueryPermissionsHandler.Zone;
+import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler;
+import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.AreaZone;
+import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.WorldZone;
+import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.Zone;
 import com.forgeessentials.remote.client.network.QueryPlayerHandler;
 import com.google.gson.JsonElement;
 

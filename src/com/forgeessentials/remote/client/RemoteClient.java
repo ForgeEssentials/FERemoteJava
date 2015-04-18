@@ -3,6 +3,7 @@ package com.forgeessentials.remote.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
@@ -332,9 +333,41 @@ public class RemoteClient implements Runnable {
      * @param timeout
      * @throws IOException
      */
+    public <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Type type, int timeout)
+    {
+        JsonRemoteResponse response = sendRequestAndWait(request, timeout);
+        if (response == null)
+            return null;
+        // Deserialize the data payload now that we know it's type
+        return transformResponse(response, type);
+    }
+
+    /**
+     * Send a request and wait for the response
+     * 
+     * 
+     * @param request
+     * @param clazz
+     * @param timeout
+     * @throws IOException
+     */
     public <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Class<T> clazz)
     {
         return sendRequestAndWait(request, clazz, 0);
+    }
+
+    /**
+     * Send a request and wait for the response
+     * 
+     * 
+     * @param request
+     * @param clazz
+     * @param timeout
+     * @throws IOException
+     */
+    public <T> RemoteResponse<T> sendRequestAndWait(RemoteRequest<?> request, Type type)
+    {
+        return sendRequestAndWait(request, type, 0);
     }
 
     /**
@@ -347,6 +380,18 @@ public class RemoteClient implements Runnable {
     public <T> RemoteResponse<T> transformResponse(JsonRemoteResponse response, Class<T> clazz)
     {
         return RemoteResponse.transform(response, getGson().fromJson(response.data, clazz));
+    }
+
+    /**
+     * Transforms a generic response into one with the correctly deserialized data
+     * 
+     * @param response
+     * @param clazz
+     * @return
+     */
+    public <T> RemoteResponse<T> transformResponse(JsonRemoteResponse response, Type type)
+    {
+        return RemoteResponse.transform(response, getGson().<T>fromJson(response.data, type));
     }
 
     /**
