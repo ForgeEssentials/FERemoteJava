@@ -220,17 +220,6 @@ public class RemoteClient implements Runnable {
                 if (isClosed())
                     return null;
 
-                // Wait for response to arrive and check for timeout
-                if (timeout > 0)
-                {
-                    long t = startTime + timeout - System.currentTimeMillis();
-                    wait(Math.max(1, t));
-                    if (t <= 0)
-                        return null;
-                }
-                else
-                    wait();
-
                 Iterator<JsonRemoteResponse> it = responses.iterator();
                 while (it.hasNext())
                 {
@@ -242,6 +231,17 @@ public class RemoteClient implements Runnable {
                         return response;
                     }
                 }
+
+                // Wait for response if there was none to arrive and check for timeout
+                if (timeout > 0)
+                {
+                    long t = startTime + timeout - System.currentTimeMillis();
+                    wait(Math.max(1, t));
+                    if (t <= 0)
+                        return null;
+                }
+                else
+                    wait();
             }
         }
         catch (InterruptedException e)
