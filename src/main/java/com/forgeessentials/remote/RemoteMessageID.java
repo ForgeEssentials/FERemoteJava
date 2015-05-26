@@ -1,4 +1,4 @@
-package com.forgeessentials.remote.client;
+package com.forgeessentials.remote;
 
 public abstract class RemoteMessageID
 {
