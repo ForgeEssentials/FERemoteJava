@@ -1,10 +1,11 @@
 package com.forgeessentials.remote.client.network.permission;
 
+import com.forgeessentials.remote.client.RemoteMessageID;
 import com.forgeessentials.remote.client.data.UserIdent;
 
 public final class SetPermissionHandler {
-
-    public static final String ID = "set_permission";
+    
+    public static final String ID = RemoteMessageID.SET_PERMISSION;
 
     public static class Request {
 

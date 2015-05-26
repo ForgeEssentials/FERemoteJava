@@ -1,8 +1,10 @@
-package com.forgeessentials.remote.client.network;
+package com.forgeessentials.remote.client.network.chat;
+
+import com.forgeessentials.remote.client.RemoteMessageID;
 
 public final class PushChatHandler {
     
-    public static final String ID = "push_chat";
+    public static final String ID = RemoteMessageID.PUSH_CHAT;
 
     public static class Request {
 

@@ -10,12 +10,12 @@ import com.forgeessentials.remote.client.RemoteResponse.JsonRemoteResponse;
 import com.forgeessentials.remote.client.RequestAuth;
 import com.forgeessentials.remote.client.data.PermissionList;
 import com.forgeessentials.remote.client.data.UserIdent;
-import com.forgeessentials.remote.client.network.PushChatHandler;
+import com.forgeessentials.remote.client.network.chat.PushChatHandler;
 import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler;
 import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.AreaZone;
 import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.WorldZone;
 import com.forgeessentials.remote.client.network.permission.QueryPermissionsHandler.Zone;
-import com.forgeessentials.remote.client.network.QueryPlayerHandler;
+import com.forgeessentials.remote.client.network.server.QueryPlayerHandler;
 import com.google.gson.JsonElement;
 
 public class Test implements Runnable {

@@ -1,4 +1,4 @@
-package com.forgeessentials.remote.client.network;
+package com.forgeessentials.remote.client.network.server;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.forgeessentials.remote.client.RemoteMessageID;
 import com.google.gson.JsonElement;
 
-public final class QueryPlayerHandler {
-    
-    public static final String ID = "query_player";
+public final class QueryPlayerHandler
+{
+
+    public static final String ID = RemoteMessageID.QUERY_PLAYER;
 
     public static class Request {
 

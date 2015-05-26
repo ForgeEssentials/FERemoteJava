@@ -6,16 +6,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.forgeessentials.remote.client.RemoteMessageID;
 import com.forgeessentials.remote.client.data.AreaBase;
 import com.forgeessentials.remote.client.data.AreaShape;
 import com.forgeessentials.remote.client.data.PermissionList;
 import com.forgeessentials.remote.client.data.UserIdent;
 
-public final class QueryPermissionsHandler {
+public final class QueryPermissionsHandler
+{
 
-    public static final String ID = "query_permissions";
+    public static final String ID = RemoteMessageID.QUERY_PERMISSIONS;
 
-    public static class Zone {
+    public static class Zone
+    {
 
         public int id;
 
@@ -25,7 +28,8 @@ public final class QueryPermissionsHandler {
 
     }
 
-    public static class ServerZone extends Zone {
+    public static class ServerZone extends Zone
+    {
 
         public Map<Integer, WorldZone> worldZones = new HashMap<Integer, WorldZone>();
 
@@ -38,7 +42,8 @@ public final class QueryPermissionsHandler {
         }
     }
 
-    public static class WorldZone extends Zone {
+    public static class WorldZone extends Zone
+    {
 
         public int dimensionID;
 
@@ -51,7 +56,8 @@ public final class QueryPermissionsHandler {
         }
     }
 
-    public static class AreaZone extends Zone {
+    public static class AreaZone extends Zone
+    {
 
         public String name;
 
@@ -68,7 +74,8 @@ public final class QueryPermissionsHandler {
         }
     }
 
-    public static class Response extends ServerZone {
+    public static class Response extends ServerZone
+    {
         /* dummy class */
     }
 

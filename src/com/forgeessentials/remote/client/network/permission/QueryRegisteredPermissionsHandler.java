@@ -1,7 +1,16 @@
 package com.forgeessentials.remote.client.network.permission;
 
-public final class QueryRegisteredPermissionsHandler {
+import java.util.ArrayList;
 
-    public static final String ID = "query_permission_registered";
-    
+import com.forgeessentials.remote.client.RemoteMessageID;
+
+public final class QueryRegisteredPermissionsHandler
+{
+
+    public static final String ID = RemoteMessageID.QUERY_PERMISSION_REGISTERED;
+
+    public static class Response extends ArrayList<String>
+    {
+    }
+
 }
