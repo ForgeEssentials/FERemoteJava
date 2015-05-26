@@ -1,7 +1,5 @@
 apply plugin: 'java'
 
-rootProject.name = 'FERemoteLib'
-
 repositories {
 	mavenCentral()
 	mavenLocal()
