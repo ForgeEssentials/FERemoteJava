@@ -1,5 +1,7 @@
 package com.forgeessentials.remote.client.network.chat;
 
+import java.util.Date;
+
 import com.forgeessentials.remote.client.RemoteMessageID;
 
 public final class PushChatHandler {
@@ -22,11 +24,15 @@ public final class PushChatHandler {
 
         public String message;
 
+        public Date timestamp;
+
         public Response(String username, String message)
         {
             this.username = username;
             this.message = message;
+            this.timestamp = new Date();
         }
+
     }
 
 }
