@@ -8,7 +8,8 @@
                 <attribute name="Main-Class" value="Test"/>
             </manifest>
             <fileset dir="target/classes"/>
-            <fileset dir="src"/>
+            <fileset dir="src/main/java"/>
+            <fileset dir="src/main/resources"/>
         </jar>
     </target>
 </project>
