@@ -2,14 +2,19 @@ package com.forgeessentials.remote.client.data;
 
 import java.util.UUID;
 
+import com.google.gson.annotations.Expose;
+
 public class UserIdent
 {
 
-    public UUID uuid;
+    private UUID uuid;
 
-    public String username;
+    private String username;
 
+    @Expose(serialize = false)
     private int hashCode;
+
+    /* ------------------------------------------------------------ */
 
     public UserIdent(UUID uuid, String username)
     {
@@ -17,12 +22,33 @@ public class UserIdent
         this.username = username;
     }
 
-    public static UserIdent fromString(String string)
+    /* ------------------------------------------------------------ */
+
+    public boolean hasUsername()
     {
-        if (string.charAt(0) != '(' || string.charAt(string.length() - 1) != ')' || string.indexOf('|') < 0)
-            throw new IllegalArgumentException("UserIdent string needs to be in the format \"(<uuid>|<username>)\"");
-        String[] parts = string.substring(1, string.length() - 1).split("\\|", 2);
-        return new UserIdent(UUID.fromString(parts[0]), parts[1]);
+        return username != null;
+    }
+
+    public boolean hasUuid()
+    {
+        return uuid != null;
+    }
+
+    /* ------------------------------------------------------------ */
+
+    public UUID getUuid()
+    {
+        return uuid;
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public String getUsernameOrUuid()
+    {
+        return username == null ? uuid.toString() : username;
     }
 
     /**
@@ -48,10 +74,17 @@ public class UserIdent
         return UUID.nameUUIDFromBytes(username.getBytes());
     }
 
+    /* ------------------------------------------------------------ */
+
+    public String toSerializeString()
+    {
+        return "(" + (uuid == null ? "" : uuid.toString()) + "|" + username + ")";
+    }
+
     @Override
     public String toString()
     {
-        return "(" + (uuid == null ? "" : uuid.toString()) + "|" + username + ")";
+        return toSerializeString();
     }
 
     @Override
@@ -104,6 +137,23 @@ public class UserIdent
         else
         {
             return false;
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+
+    public static UserIdent fromString(String string)
+    {
+        if (string.charAt(0) != '(' || string.charAt(string.length() - 1) != ')' || string.indexOf('|') < 0)
+            throw new IllegalArgumentException("UserIdent string needs to be in the format \"(<uuid>|<username>)\"");
+        String[] parts = string.substring(1, string.length() - 1).split("\\|", 2);
+        try
+        {
+            return new UserIdent(UUID.fromString(parts[0]), parts[1]);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return new UserIdent((UUID) null, parts[1]);
         }
     }
 

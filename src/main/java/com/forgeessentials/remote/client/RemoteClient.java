@@ -27,9 +27,11 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
 
-public class RemoteClient implements Runnable {
+public class RemoteClient implements Runnable
+{
 
-    public static interface DataType<T> extends JsonSerializer<T>, JsonDeserializer<T> {
+    public static interface DataType<T> extends JsonSerializer<T>, JsonDeserializer<T>
+    {
         Class<T> getType();
     }
 
@@ -53,7 +55,7 @@ public class RemoteClient implements Runnable {
     private static Gson gson;
 
     private static boolean formatsChanged;
-    
+
     private static Map<Class<?>, JsonSerializer<?>> serializers = new HashMap<>();
 
     private static Map<Class<?>, JsonDeserializer<?>> deserializers = new HashMap<>();
@@ -76,7 +78,7 @@ public class RemoteClient implements Runnable {
         {
             GsonBuilder builder = new GsonBuilder();
             builder.setPrettyPrinting();
-            //builder.setExclusionStrategies(this);
+            // builder.setExclusionStrategies(this);
             for (Entry<Class<?>, JsonSerializer<?>> format : serializers.entrySet())
                 builder.registerTypeAdapter(format.getKey(), format.getValue());
             for (Entry<Class<?>, JsonDeserializer<?>> format : deserializers.entrySet())
@@ -257,8 +259,7 @@ public class RemoteClient implements Runnable {
      * @param request
      * @throws IOException
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public synchronized void sendRequest(RemoteRequest request) throws IOException
+    public synchronized void sendRequest(RemoteRequest<?> request) throws IOException
     {
         if (isClosed())
             return;
@@ -266,6 +267,25 @@ public class RemoteClient implements Runnable {
         OutputStreamWriter ow = new OutputStreamWriter(socket.getOutputStream());
         ow.write(getGson().toJson(request) + SEPARATOR);
         ow.flush();
+    }
+
+    /**
+     * Send request to server and catches exceptions
+     * 
+     * @param request
+     * @return
+     */
+    public boolean sendRequestSafe(RemoteRequest<?> request)
+    {
+        try
+        {
+            sendRequest(request);
+            return true;
+        }
+        catch (IOException e)
+        {
+            return false;
+        }
     }
 
     /**
@@ -392,7 +412,7 @@ public class RemoteClient implements Runnable {
      */
     public <T> RemoteResponse<T> transformResponse(JsonRemoteResponse response, Type type)
     {
-        return RemoteResponse.transform(response, getGson().<T>fromJson(response.data, type));
+        return RemoteResponse.transform(response, getGson().<T> fromJson(response.data, type));
     }
 
     /**
