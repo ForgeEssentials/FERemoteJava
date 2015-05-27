@@ -82,6 +82,7 @@ public class RemoteClient implements Runnable {
             for (Entry<Class<?>, JsonDeserializer<?>> format : deserializers.entrySet())
                 builder.registerTypeAdapter(format.getKey(), format.getValue());
             gson = builder.create();
+            formatsChanged = false;
         }
         return gson;
     }
